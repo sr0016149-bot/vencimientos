@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control de Vencimientos</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    margin: 0;
+    padding: 15px;
+}
+h1 {
+    text-align: center;
+}
+form {
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+input, button {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+}
+button {
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+.card {
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+.vencido { border-left: 6px solid red; }
+.porvencer { border-left: 6px solid orange; }
+.activo { border-left: 6px solid green; }
+</style>
+</head>
+<body>
+
+<h1>📅 Control de Vencimientos</h1>
+
+<form id="form">
+    <input type="text" id="cliente" placeholder="Cliente" required>
+    <input type="text" id="servicio" placeholder="Servicio" required>
+    <input type="date" id="fecha" required>
+    <input type="number" id="dias" placeholder="Duración en días" required>
+    <button type="submit">Guardar</button>
+</form>
+
+<div id="lista"></div>
+
+<script>
+let datos = JSON.parse(localStorage.getItem("clientes")) || [];
+
+document.getElementById("form").addEventListener("submit", e => {
+    e.preventDefault();
+    const cliente = cliente.value;
+    const servicio = servicio.value;
+    const fecha = fecha.value;
+    const dias = parseInt(dias.value);
+
+    const inicio = new Date(fecha);
+    const vencimiento = new Date(inicio);
+    vencimiento.setDate(inicio.getDate() + dias);
+
+    datos.push({cliente, servicio, vencimiento});
+    localStorage.setItem("clientes", JSON.stringify(datos));
+    e.target.reset();
+    mostrar();
+});
+
+function mostrar() {
+    const hoy = new Date();
+    lista.innerHTML = "";
+    datos.forEach((d, i) => {
+        const v = new Date(d.vencimiento);
+        const diff = Math.ceil((v - hoy) / (1000*60*60*24));
+        let clase = "activo";
+        if (diff <= 0) clase = "vencido";
+        else if (diff <= 5) clase = "porvencer";
+
+        lista.innerHTML += `
+        <div class="card ${clase}">
+            <b>${d.cliente}</b><br>
+            ${d.servicio}<br>
+            Vence: ${v.toLocaleDateString()}<br>
+            <button onclick="borrar(${i})">Eliminar</button>
+        </div>`;
+    });
+}
+
+function borrar(i) {
+    datos.splice(i,1);
+    localStorage.setItem("clientes", JSON.stringify(datos));
+    mostrar();
+}
+
+mostrar();
+</script>
+
+</body>
+</html>
