@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control de Vencimientos</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#007bff">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:#eef2f6;
+  padding-top:70px;
+}
+.hidden{display:none}
+.box,.card{
+  background:#fff;
+  padding:12px;
+  border-radius:10px;
+  margin:10px;
+}
+header{
+  position:fixed;
+  top:0;left:0;right:0;
+  background:#007bff;
+  color:#fff;
+  padding:15px;
+  font-weight:bold;
+}
+input,button{
+  width:100%;
+  padding:10px;
+  margin:5px 0;
+}
+button{
+  background:#007bff;
+  color:#fff;
+  border:none;
+}
+.vencido{border-left:6px solid red}
+.porvencer{border-left:6px solid orange}
+.activo{border-left:6px solid green}
+.whatsapp{background:#25d366}
+.delete{background:#dc3545}
+.fab{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  font-size:30px;
+}
+</style>
+</head>
+
+<body>
+
+<header>📅 Control de Vencimientos</header>
+
+<!-- LOGIN -->
+<div id="loginBox" class="box">
+  <h2>🔐 Ingreso</h2>
+  <input type="password" id="passwordInput" placeholder="Contraseña">
+  <button onclick="hacerLogin()">Entrar</button>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+
+<div class="box">
+  <input id="cliente" placeholder="Cliente">
+  <input id="servicio" placeholder="Servicio">
+  <input id="fecha" type="date">
+  <input id="dias" type="number" placeholder="Duración (días)">
+  <input id="ganancia" type="number" placeholder="Ganancia">
+  <button onclick="guardar()">Guardar</button>
+</div>
+
+<div id="lista"></div>
+</div>
+
+<script>
+/* ===== CONFIG ===== */
+const CLAVE_CORRECTA = "0546";
+
+/* ===== ESTADO ===== */
+let datos = JSON.parse(localStorage.getItem("clientes")) || [];
+
+/* ===== LOGIN ===== */
+function hacerLogin(){
+  const pass = document.getElementById("passwordInput").value;
+  if(pass === CLAVE_CORRECTA){
+    localStorage.setItem("login_ok","1");
+    iniciarApp();
+  }else{
+    alert("Contraseña incorrecta");
+  }
+}
+
+function iniciarApp(){
+  document.getElementById("loginBox").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+  mostrar();
+}
+
+if(localStorage.getItem("login_ok")==="1"){
+  iniciarApp();
+}
+
+/* ===== APP ===== */
+function guardar(){
+  let f = new Date(fecha.value);
+  f.setDate(f.getDate() + parseInt(dias.value));
+  datos.push({
+    c: cliente.value,
+    s: servicio.value,
+    v: f.toISOString(),
+    g: +ganancia.value || 0
+  });
+  localStorage.setItem("clientes",JSON.stringify(datos));
+  document.querySelectorAll("input").forEach(i=>i.value="");
+  mostrar();
+}
+
+function mostrar(){
+  lista.innerHTML="";
+  datos.forEach((d,i)=>{
+    let diff = Math.ceil((new Date(d.v)-new Date())/86400000);
+    let cl = diff<=0?"vencido":diff<=5?"porvencer":"activo";
+    lista.innerHTML+=`
+      <div class="card ${cl}">
+        <b>${d.c}</b><br>
+        ${d.s}<br>
+        Vence: ${new Date(d.v).toLocaleDateString()}<br>
+        $${d.g}<br>
+        <button class="delete" onclick="borrar(${i})">Eliminar</button>
+      </div>
+    `;
+  });
+}
+
+function borrar(i){
+  datos.splice(i,1);
+  localStorage.setItem("clientes",JSON.stringify(datos));
+  mostrar();
+}
+
+/* ===== PWA ===== */
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js");
+}
+</script>
+
+</body>
+</html>
