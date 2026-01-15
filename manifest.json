@@ -1,0 +1,15 @@
+{
+  "name": "Control de Vencimientos",
+  "short_name": "Vencimientos",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#eef2f6",
+  "theme_color": "#007bff",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/747/747310.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
