@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control de Vencimientos</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#007bff">
+
+<style>
+:root{
+  --bg:#eef2f6;
+  --card:#fff;
+  --text:#000;
+}
+body.dark{
+  --bg:#121212;
+  --card:#1e1e1e;
+  --text:#fff;
+}
+body{
+  margin:0;
+  font-family:Arial;
+  background:var(--bg);
+  color:var(--text);
+  padding-top:70px;
+  transition:.3s;
+}
+
+/* BARRA SUPERIOR */
+header{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  background:#007bff;
+  color:#fff;
+  padding:12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  z-index:1000;
+}
+header button{
+  background:none;
+  border:none;
+  color:#fff;
+  font-size:18px;
+  cursor:pointer;
+}
+
+/* CONTENEDORES */
+.box,.card,.stat{
+  background:var(--card);
+  padding:12px;
+  border-radius:12px;
+  margin-bottom:10px;
+  box-shadow:0 4px 8px rgba(0,0,0,.1);
+  animation:fade .3s;
+}
+@keyframes fade{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:none}
+}
+
+input,button{
+  width:100%;
+  padding:10px;
+  margin:5px 0;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+button{
+  background:#007bff;
+  color:#fff;
+  border:none;
+}
+
+/* BUSCADOR PRO */
+.search{
+  position:relative;
+}
+.search input{
+  padding-left:35px;
+}
+.search span{
+  position:absolute;
+  left:10px;
+  top:50%;
+  transform:translateY(-50%);
+}
+
+/* ESTADOS */
+.vencido{border-left:6px solid red}
+.porvencer{border-left:6px solid orange}
+.activo{border-left:6px solid green}
+
+/* BOTÓN FLOTANTE */
+.fab{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:#007bff;
+  color:#fff;
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  font-size:30px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 6px 12px rgba(0,0,0,.3);
+  cursor:pointer;
+}
+
+/* LOGIN */
+.hidden{display:none}
+.whatsapp{background:#25d366}
+.delete{background:#dc3545}
+</style>
+</head>
+
+<body>
+
+<header>
+  <b>📅 Vencimientos</b>
+  <button onclick="toggleDark()">🌙</button>
+</header>
+
+<div id="login" class="box">
+  <h2>🔐 Acceso</h2>
+  <input type="password" id="pass" placeholder="Contraseña">
+  <button onclick="login()">Entrar</button>
+</div>
+
+<div id="app" class="hidden">
+
+<div class="stat" id="gananciaTotal">Ganancia: $0</div>
+
+<div class="box" id="form" style="display:none">
+  <input id="cliente" placeholder="Cliente">
+  <input id="telefono" placeholder="WhatsApp">
+  <input id="servicio" placeholder="Servicio">
+  <input id="fecha" type="date">
+  <input id="dias" type="number" placeholder="Duración (días)">
+  <input id="ganancia" type="number" placeholder="Ganancia">
+  <button onclick="guardar()">Guardar</button>
+</div>
+
+<div class="search box">
+  <span>🔍</span>
+  <input id="buscar" placeholder="Buscar..." onkeyup="mostrar()">
+</div>
+
+<div id="lista"></div>
+</div>
+
+<div class="fab" onclick="toggleForm()">+</div>
+
+<script>
+const CLAVE="0546";
+let datos=JSON.parse(localStorage.getItem("clientes"))||[];
+
+function login(){
+  if(pass.value===CLAVE){
+    localStorage.setItem("login","ok");
+    iniciar();
+  }else alert("Contraseña incorrecta");
+}
+function iniciar(){
+  login.classList.add("hidden");
+  app.classList.remove("hidden");
+  mostrar();
+}
+if(localStorage.getItem("login")==="ok") iniciar();
+
+function guardar(){
+  let ven=new Date(fecha.value);
+  ven.setDate(ven.getDate()+parseInt(dias.value));
+  datos.push({
+    c:cliente.value,
+    t:telefono.value,
+    s:servicio.value,
+    v:ven.toISOString(),
+    g:+ganancia.value||0
+  });
+  localStorage.setItem("clientes",JSON.stringify(datos));
+  document.querySelectorAll("#form input").forEach(i=>i.value="");
+  form.style.display="none";
+  mostrar();
+}
+
+function mostrar(){
+  lista.innerHTML="";
+  let gt=0;
+  datos.forEach((d,i)=>{
+    if(!d.c.toLowerCase().includes(buscar.value.toLowerCase()))return;
+    let diff=Math.ceil((new Date(d.v)-new Date())/86400000);
+    let cl=diff<=0?"vencido":diff<=5?"porvencer":"activo";
+    gt+=d.g;
+    lista.innerHTML+=`
+    <div class="card ${cl}">
+      <b>${d.c}</b><br>${d.s}<br>
+      Vence: ${new Date(d.v).toLocaleDateString()}<br>
+      $${d.g}<br>
+      ${d.t?`<a href="https://wa.me/${d.t}" target="_blank"><button class="whatsapp">WhatsApp</button></a>`:""}
+      <button class="delete" onclick="del(${i})">Eliminar</button>
+    </div>`;
+  });
+  gananciaTotal.innerText="Ganancia: $"+gt;
+}
+
+function del(i){
+  datos.splice(i,1);
+  localStorage.setItem("clientes",JSON.stringify(datos));
+  mostrar();
+}
+
+function toggleForm(){
+  form.style.display=form.style.display=="none"?"block":"none";
+}
+
+function toggleDark(){
+  document.body.classList.toggle("dark");
+  localStorage.setItem("dark",document.body.classList.contains("dark"));
+}
+if(localStorage.getItem("dark")=="true")document.body.classList.add("dark");
+
+if("serviceWorker"in navigator){
+  navigator.serviceWorker.register("sw.js");
+}
+</script>
+
+</body>
+</html>
