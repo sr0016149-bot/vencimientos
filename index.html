@@ -128,7 +128,7 @@ button{
   <button onclick="toggleDark()">🌙</button>
 </header>
 
-<div id="login" class="box">
+<div id="loginBox" class="box">
   <h2>🔐 Acceso</h2>
   <input type="password" id="pass" placeholder="Contraseña">
   <button onclick="login()">Entrar</button>
@@ -169,8 +169,8 @@ function login(){
   }else alert("Contraseña incorrecta");
 }
 function iniciar(){
-  login.classList.add("hidden");
-  app.classList.remove("hidden");
+  loginBox.classList.add("hidden");
+  loginBox.classList.remove("hidden");
   mostrar();
 }
 if(localStorage.getItem("login")==="ok") iniciar();
@@ -234,4 +234,5 @@ if("serviceWorker"in navigator){
 
 </body>
 </html>
+
 
